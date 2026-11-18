@@ -3,6 +3,8 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { TableSkeleton } from "@/components/loading-skeletons";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { authenticatedApiJson } from "@/lib/api-client";
 import { tuitionJson, type Tuition } from "@/lib/tuitions";
@@ -20,11 +22,6 @@ type Decision = { post: ReviewPost; action: "approve" | "reject" };
 const endpoint = "/api/admin/tuitions";
 const fee = new Intl.NumberFormat("en-BD");
 const date = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Dhaka" });
-const badges: Record<Status, string> = {
-  pending: "bg-amber-100 text-amber-950",
-  approved: "bg-emerald-100 text-emerald-950",
-  rejected: "bg-red-100 text-red-950",
-};
 
 export function AdminTuitions() {
   const [search, setSearch] = useState("");
@@ -82,6 +79,16 @@ export function AdminTuitions() {
     }
   }
 
+  function reviewActions(post: ReviewPost) {
+    if (post.approvalStatus !== "pending") return null;
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" variant="outline" aria-label={"Approve " + post.title} onClick={() => setDecision({ post, action: "approve" })}>Approve</Button>
+        <Button type="button" size="sm" variant="destructive" aria-label={"Reject " + post.title} onClick={() => setDecision({ post, action: "reject" })}>Reject</Button>
+      </div>
+    );
+  }
+
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-bold">Tuition approvals</h1>
@@ -97,11 +104,11 @@ export function AdminTuitions() {
               setSearch(value);
               if (!value && query.search) load({ page: 1, search: "" });
             }}
-            className="h-9 w-full rounded-lg border bg-background px-3" />
+            className="form-control" />
         </label>
         <label className="grid gap-1.5 text-sm font-medium">
           Status
-          <select value={query.status} className="h-9 rounded-lg border bg-background px-3"
+          <select value={query.status} className="form-control"
             onChange={(event) => load({ page: 1, status: event.currentTarget.value as Status | "" })}>
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
@@ -112,7 +119,7 @@ export function AdminTuitions() {
         <Button type="submit">Search</Button>
       </form>
 
-      {!state && <p role="status" className="rounded-xl border bg-card p-5">Loading tuition posts…</p>}
+      {!state && <TableSkeleton label="Loading tuition posts" />}
       {state && "error" in state && (
         <div role="alert" className="space-y-2 rounded-xl border bg-card p-5">
           <p>{state.error}</p>
@@ -121,7 +128,7 @@ export function AdminTuitions() {
       )}
       {state && "items" in state && (state.items.length ? (
         <>
-          <div tabIndex={0} role="region" aria-label="Tuition review results" className="overflow-x-auto rounded-xl border bg-card">
+          <div tabIndex={0} role="region" aria-label="Tuition review results" className="hidden overflow-x-auto rounded-xl border bg-card lg:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">Tuition posts for review</caption>
               <thead className="border-b bg-muted">
@@ -138,21 +145,33 @@ export function AdminTuitions() {
                     <td className="px-3 py-3 whitespace-nowrap">৳{fee.format(post.monthlyFee)}</td>
                     <td className="px-3 py-3 whitespace-nowrap"><time dateTime={post.createdAt}>{date.format(new Date(post.createdAt))}</time></td>
                     <td className="px-3 py-3">
-                      <span className={"rounded-full px-2 py-1 text-xs font-semibold capitalize " + badges[post.approvalStatus]}>{post.approvalStatus}</span>
+                      <StatusBadge status={post.approvalStatus} />
                     </td>
                     <td className="px-3 py-3">
-                      {post.approvalStatus === "pending" ? (
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" size="sm" variant="outline" aria-label={"Approve " + post.title} onClick={() => setDecision({ post, action: "approve" })}>Approve</Button>
-                          <Button type="button" size="sm" variant="destructive" aria-label={"Reject " + post.title} onClick={() => setDecision({ post, action: "reject" })}>Reject</Button>
-                        </div>
-                      ) : <span aria-label="No review actions">—</span>}
+                      {reviewActions(post) ?? <span aria-label="No review actions">—</span>}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:hidden">
+            {state.items.map((post) => (
+              <li key={post._id} className="min-w-0 space-y-3 rounded-2xl border bg-card p-4 text-sm wrap-anywhere">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <h2 className="font-semibold">{post.title}</h2>
+                  <StatusBadge status={post.approvalStatus} />
+                </div>
+                <dl className="grid grid-cols-2 gap-3">
+                  <div><dt className="text-xs text-muted-foreground">Tutor</dt><dd>{post.tutorName ?? "Unknown tutor"}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Subject</dt><dd>{post.subject}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Monthly fee</dt><dd>৳{fee.format(post.monthlyFee)}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Posted</dt><dd><time dateTime={post.createdAt}>{date.format(new Date(post.createdAt))}</time></dd></div>
+                </dl>
+                {reviewActions(post)}
+              </li>
+            ))}
+          </ul>
           <nav aria-label="Tuition results pages" className="flex flex-wrap items-center justify-between gap-2">
             <p role="status" className="text-sm text-muted-foreground">
               {(state.page - 1) * state.limit + 1}–{(state.page - 1) * state.limit + state.items.length} of {state.total} posts

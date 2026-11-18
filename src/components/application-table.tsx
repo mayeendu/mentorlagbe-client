@@ -4,15 +4,12 @@ import { AlertDialog } from "@base-ui/react/alert-dialog";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { TableSkeleton } from "@/components/loading-skeletons";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { authenticatedApiJson } from "@/lib/api-client";
 import { applicationEndpoints, getApplications, type Application, type ApplicationRole } from "@/lib/applications";
 
-const badge: Record<Application["status"], string> = {
-  pending: "bg-amber-100 text-amber-950",
-  accepted: "bg-emerald-100 text-emerald-950",
-  rejected: "bg-red-100 text-red-950",
-};
 const date = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Dhaka" });
 
 type Action = "cancel" | "accept" | "reject";
@@ -76,7 +73,7 @@ export function ApplicationTable({ role }: { role: ApplicationRole }) {
       </div>
     ) },
     { label: "Applied", cell: (item) => <time dateTime={item.createdAt}>{date.format(new Date(item.createdAt))}</time> },
-    { label: "Status", cell: (item) => <span className={"rounded-full px-2 py-1 text-xs font-semibold capitalize " + badge[item.status]}>{item.status}</span> },
+    { label: "Status", cell: (item) => <StatusBadge status={item.status} /> },
     { label: "Actions", cell: (item) => {
       if (item.status !== "pending") return <span aria-label="No actions">—</span>;
       const button = (action: Action, label: string) => (
@@ -94,7 +91,7 @@ export function ApplicationTable({ role }: { role: ApplicationRole }) {
         <h1 ref={heading} tabIndex={-1} className="text-2xl font-bold">{title}</h1>
         {student && <Link className="text-sm font-semibold text-primary underline" href="/tuitions">Browse tuition</Link>}
       </div>
-      {!state && <p role="status" className="rounded-xl border bg-card p-5">Loading applications…</p>}
+      {!state && <TableSkeleton label="Loading applications" />}
       {state && "error" in state && (
         <div role="alert" className="space-y-2 rounded-xl border bg-card p-5">
           <p>{state.error}</p>
@@ -137,7 +134,7 @@ export function ApplicationTable({ role }: { role: ApplicationRole }) {
       <AlertDialog.Root open={decision !== null} onOpenChange={(open) => { if (!open && !saving) setDecision(null); }}>
         <AlertDialog.Portal>
           <AlertDialog.Backdrop className="fixed inset-0 z-40 bg-black/50" />
-          <AlertDialog.Popup initialFocus={backButton} finalFocus={heading} className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-1/2 space-y-4 rounded-xl border bg-card p-5 shadow-lg">
+          <AlertDialog.Popup initialFocus={backButton} finalFocus={heading} className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md max-h-[85dvh] -translate-1/2 space-y-4 overflow-y-auto rounded-xl border bg-card p-5 shadow-lg">
             {decision && (
               <>
                 <AlertDialog.Title className="text-lg font-bold capitalize">{decision.action} application?</AlertDialog.Title>

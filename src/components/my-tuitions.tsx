@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TuitionForm } from "@/components/tuition-form";
+import { TableSkeleton } from "@/components/loading-skeletons";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { tuitionJson, tuitionRequest, type Tuition } from "@/lib/tuitions";
 
@@ -92,7 +94,7 @@ export function MyTuitions() {
         <h1 className="text-2xl font-bold">My tuitions</h1>
         <Link href="/dashboard/tutor/post-tuition" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Post tuition</Link>
       </div>
-      {!state && <p role="status" className="rounded-xl border bg-card p-5">Loading tuitions…</p>}
+      {!state && <TableSkeleton label="Loading tuitions" />}
       {state && "error" in state && (
         <div role="alert" className="space-y-2 rounded-xl border bg-card p-5">
           <p>{state.error}</p>
@@ -115,8 +117,8 @@ export function MyTuitions() {
                       <span className="block font-normal text-muted-foreground">{item.subject} · {item.location}</span>
                     </th>
                     <td className="p-3 whitespace-nowrap">৳{fee.format(item.monthlyFee)}</td>
-                    <td className="p-3 capitalize">{item.approvalStatus}</td>
-                    <td className="p-3">{item.isActive ? "Active" : "Inactive"}</td>
+                    <td className="p-3"><StatusBadge status={item.approvalStatus} /></td>
+                    <td className="p-3"><StatusBadge status={item.isActive ? "active" : "inactive"} /></td>
                     <td className="p-3">{actions(item)}</td>
                   </tr>
                 ))}
@@ -129,7 +131,7 @@ export function MyTuitions() {
                 <h2 className="font-bold">{item.title}</h2>
                 <p className="text-sm text-muted-foreground">{item.subject} · {item.location}</p>
                 <p className="text-sm">৳{fee.format(item.monthlyFee)} per month</p>
-                <p className="text-sm">Approval: <span className="capitalize">{item.approvalStatus}</span> · {item.isActive ? "Active" : "Inactive"}</p>
+                <div className="flex flex-wrap gap-2"><StatusBadge status={item.approvalStatus} /><StatusBadge status={item.isActive ? "active" : "inactive"} /></div>
                 {actions(item)}
               </li>
             ))}

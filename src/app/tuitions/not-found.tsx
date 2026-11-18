@@ -1,11 +1,19 @@
 import Link from "next/link";
+import { RouteMessage } from "@/components/route-message";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteNavbar } from "@/components/site-navbar";
 import { buttonVariants } from "@/components/ui/button";
 
 export default function TuitionNotFound() {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 px-5 py-10 sm:px-8">
-      <h1 className="text-2xl font-bold">Tuition unavailable</h1>
-      <Link href="/tuitions" className={buttonVariants()}>Browse tuition</Link>
-    </div>
+    <>
+      <SiteNavbar />
+      <main id="main-content" tabIndex={-1} className="grid flex-1 place-items-center bg-muted px-4 py-12">
+        <RouteMessage title="Tuition unavailable" detail="This tuition listing is no longer available.">
+          <Link href="/tuitions" className={buttonVariants()}>Browse tuition</Link>
+        </RouteMessage>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

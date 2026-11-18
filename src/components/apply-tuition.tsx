@@ -79,7 +79,7 @@ export function ApplyTuition({ tuitionId, title }: { tuitionId: string; title: s
                     id, name, maxLength: max, required: name !== "studentNote",
                     "aria-invalid": Boolean(issue),
                     "aria-describedby": issue ? id + "-error" : undefined,
-                    className: "w-full rounded-lg border bg-background px-3 py-2 text-sm",
+                    className: "form-control",
                   };
                   return (
                     <div key={name} className="grid gap-1.5">

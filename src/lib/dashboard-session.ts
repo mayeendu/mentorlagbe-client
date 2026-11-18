@@ -9,7 +9,7 @@ export const dashboardTitles = {
 };
 
 export type Role = keyof typeof dashboardTitles;
-export type AccountProfile = { name: string; email: string; role: Role; plan: string };
+export type AccountProfile = { id: string; name: string; image: string | null; email: string; role: Role; plan: string };
 
 function isRole(value: unknown): value is Role {
   return typeof value === "string" && Object.hasOwn(dashboardTitles, value);
@@ -28,10 +28,12 @@ export const getAccountProfile = cache(async (): Promise<AccountProfile | null> 
   if (response.status === 401) return null;
   if (!response.ok) throw new Error("Could not verify the session.");
 
-  const session: { user?: { role?: unknown; name?: unknown; email?: unknown; plan?: unknown } } | null = await response.json();
+  const session: { user?: { id?: unknown; image?: unknown; role?: unknown; name?: unknown; email?: unknown; plan?: unknown } } | null = await response.json();
   const user = session?.user;
   if (!user || !isRole(user.role)) return null;
   return {
+    id: typeof user.id === "string" ? user.id : "",
+    image: typeof user.image === "string" ? user.image : null,
     role: user.role,
     name: typeof user.name === "string" && user.name.trim() ? user.name : "MentorLagbe member",
     email: typeof user.email === "string" ? user.email : "",

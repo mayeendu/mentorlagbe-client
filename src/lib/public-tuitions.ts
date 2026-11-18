@@ -36,6 +36,13 @@ export async function getPublicTuitions(filters: URLSearchParams): Promise<Listi
   return result.json();
 }
 
+export async function getPublicClassLevels(): Promise<string[]> {
+  const result = await fetchPublicTuitions("/class-levels");
+  if (!result.ok) throw new Error("Class levels are unavailable.");
+  const data: { classLevels: string[] } = await result.json();
+  return data.classLevels;
+}
+
 export async function getPublicTuition(id: string): Promise<PublicTuitionDetails | null> {
   if (!/^[a-f0-9]{24}$/i.test(id)) return null;
   const result = await fetchPublicTuitions("/" + id);

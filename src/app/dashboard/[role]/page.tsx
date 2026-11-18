@@ -2,6 +2,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { UpgradeButton } from "@/components/upgrade-button";
 import { ApplicationStats } from "@/components/application-stats";
 import { AccountAvatar } from "@/components/account-menu";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
@@ -16,7 +17,7 @@ const overview = {
 
 async function Dashboard({ params }: PageProps<"/dashboard/[role]">) {
   const [requested, profile] = await Promise.all([params, requireDashboardProfile()]);
-  const { role, name, email, plan } = profile;
+  const { role, name, image, email, plan } = profile;
   if (requested.role !== role) redirect(`/dashboard/${role}`);
   const nextStep = overview[role];
 
@@ -33,7 +34,7 @@ async function Dashboard({ params }: PageProps<"/dashboard/[role]">) {
       <section id="profile" className="min-w-0 rounded-3xl border bg-card p-6 sm:p-8">
         <h2 className="mb-5 text-xl font-bold tracking-tight">Profile summary</h2>
         <div className="flex min-w-0 items-center gap-3">
-          <AccountAvatar name={name} />
+          <AccountAvatar name={name} image={image} />
           <div className="min-w-0">
             <p className="break-words font-semibold">{name}</p>
             {email && <p className="break-all text-sm text-muted-foreground">{email}</p>}
@@ -43,6 +44,7 @@ async function Dashboard({ params }: PageProps<"/dashboard/[role]">) {
           <div><dt className="text-muted-foreground">Role</dt><dd className="mt-1 font-semibold capitalize">{role}</dd></div>
           <div><dt className="text-muted-foreground">Plan</dt><dd className="mt-1 font-semibold capitalize">{plan}</dd></div>
         </dl>
+        {role !== "admin" && plan !== "pro" && <UpgradeButton role={role} className="mt-5" />}
       </section>
       {role === "admin" && (
         <section id="access" className="rounded-3xl border bg-card p-6 sm:p-8">

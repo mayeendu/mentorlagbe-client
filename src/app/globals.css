@@ -65,7 +65,7 @@
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e8e2f0;
-  --input: oklch(0.922 0 0);
+  --input: #978ca6;
   --ring: #8c69e5;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -117,14 +117,26 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@utility form-control {
+  @apply min-h-11 w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground;
+  @apply focus-visible:border-primary aria-invalid:border-destructive disabled:opacity-60;
+}
+
 @layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex="0"]):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    text-wrap: pretty;
   }
   html {
     @apply scroll-smooth font-sans motion-reduce:scroll-auto;
+    scrollbar-gutter: stable;
   }
 }

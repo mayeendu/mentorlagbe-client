@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { ArrowLeft, BookOpen, CalendarDays, MapPin, UserRound } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft, CalendarDays, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ApplyTuition } from "@/components/apply-tuition";
+import { TuitionDetailSkeleton } from "@/components/loading-skeletons";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteNavbar } from "@/components/site-navbar";
+import { TuitionBanner } from "@/components/tuition-banner";
+import { TuitionFilters } from "@/components/tuition-filters";
 import { TuitionUnavailable } from "@/components/tuition-unavailable";
 import { buttonVariants } from "@/components/ui/button";
 import { getAccountProfile } from "@/lib/dashboard-session";
-import { getPublicTuition, monthlyFee, weeklySchedule } from "@/lib/public-tuitions";
+import { getPublicClassLevels, getPublicTuition, monthlyFee, subjects, weeklySchedule } from "@/lib/public-tuitions";
 
 export const metadata: Metadata = { title: "Tuition details" };
 
@@ -24,17 +27,17 @@ async function ApplyAction({ id, title }: { id: string; title: string }) {
 
 async function TuitionDetails({ params }: Pick<PageProps<"/tuitions/[id]">, "params">) {
   const { id } = await params;
-  const post = await getPublicTuition(id).catch(() => undefined);
+  const [post, classLevels] = await Promise.all([
+    getPublicTuition(id).catch(() => undefined),
+    getPublicClassLevels().catch(() => null),
+  ]);
   if (post === undefined) return <TuitionUnavailable message="Tuition details are temporarily unavailable." />;
   if (!post) notFound();
 
   return (
+    <TuitionFilters subjects={subjects} classLevels={classLevels}>
     <article className="overflow-hidden rounded-3xl border bg-card">
-      <div className="relative grid h-48 place-items-center bg-[#eee8ff] text-[#5d35b9] sm:h-72">
-        {post.imageUrl ? (
-          <Image unoptimized src={post.imageUrl} alt="" fill sizes="(max-width: 1024px) 100vw, 960px" className="object-cover" />
-        ) : <BookOpen aria-hidden="true" className="size-16" />}
-      </div>
+      <TuitionBanner image={post.imageUrl} />
       <div className="space-y-6 p-5 sm:p-8">
         <div className="space-y-2">
           <p className="text-sm font-semibold text-primary">{post.format} · {post.subject}{post.classLevel && " · " + post.classLevel}</p>
@@ -55,6 +58,7 @@ async function TuitionDetails({ params }: Pick<PageProps<"/tuitions/[id]">, "par
         </Suspense>
       </div>
     </article>
+    </TuitionFilters>
   );
 }
 
@@ -62,12 +66,13 @@ export default function TuitionDetailPage({ params }: PageProps<"/tuitions/[id]"
   return (
     <>
       <SiteNavbar />
-      <main className="mx-auto w-full max-w-5xl space-y-5 px-5 py-8 sm:px-8">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 space-y-5 px-4 py-8 sm:px-8">
         <Link href="/tuitions" className="inline-flex items-center gap-2 text-sm font-semibold text-primary"><ArrowLeft aria-hidden="true" className="size-4" /> All tuitions</Link>
-        <Suspense fallback={<div role="status" aria-label="Loading tuition details" className="h-72 animate-pulse rounded-3xl bg-muted motion-reduce:animate-none" />}>
+        <Suspense fallback={<TuitionDetailSkeleton />}>
           <TuitionDetails params={params} />
         </Suspense>
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ProfileIdentityProvider } from "@/components/profile-identity";
 import { Toaster } from "sonner";
 import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
@@ -22,7 +23,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={cn("h-full antialiased font-sans", geistMono.variable, inter.variable)}
     >
-      <body className="min-h-full flex flex-col"><Toaster richColors />{children}</body>
+      <body className="flex min-h-full flex-col">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-100 focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:shadow-lg">Skip to content</a>
+        <Toaster richColors />
+        <ProfileIdentityProvider>{children}</ProfileIdentityProvider>
+      </body>
     </html>
   );
 }

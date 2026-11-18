@@ -12,7 +12,13 @@ function readOrigin(value, key, production) {
   }
 }
 
+const privateVariables = ["MONGODB_URI", "BETTER_AUTH_SECRET", "JWT_SECRET", "IMGBB_API_KEY", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"];
+
 export function readClientEnvironment(env = process.env) {
+  for (const name of privateVariables) {
+    const publicName = "NEXT_PUBLIC_" + name;
+    if (env[publicName]) throw new Error(publicName + " belongs in the private Render environment.");
+  }
   const production = env.NODE_ENV === "production";
   const publicApiOrigin = readOrigin(env.NEXT_PUBLIC_API_URL, "NEXT_PUBLIC_API_URL", production);
   const serverApiOrigin = env.API_URL === undefined ? publicApiOrigin : readOrigin(env.API_URL, "API_URL", production);

@@ -13,6 +13,12 @@ test("requires HTTPS API origins at production startup", () => {
   assert.equal(readClientEnvironment({ NEXT_PUBLIC_API_URL: "http://localhost:4321" }).publicApiOrigin, "http://localhost:4321");
 });
 
+test("rejects publicly named backend credentials without including their value", () => {
+  assert.throws(() => readClientEnvironment({
+    NODE_ENV: "production", NEXT_PUBLIC_API_URL: "https://api.example.test", NEXT_PUBLIC_STRIPE_SECRET_KEY: "fixture-secret",
+  }), (error) => /NEXT_PUBLIC_STRIPE_SECRET_KEY/.test(error.message) && !error.message.includes("fixture-secret"));
+});
+
 test("production browser policy permits only configured API connections and disables embedding", () => {
   const headers = Object.fromEntries(securityHeaders("https://api.example.test", true).map(({ key, value }) => [key, value]));
   assert.equal(headers["X-Frame-Options"], "DENY");

@@ -8,6 +8,7 @@ import { requireDashboardProfile } from "@/lib/dashboard-session";
 async function ResultDetails({ params, searchParams }: PageProps<"/payments/[result]">) {
   const [{ result }, query] = await Promise.all([params, searchParams]);
   if (result !== "success" && result !== "cancel" && result !== "mock") notFound();
+  if (result === "mock" && process.env.NODE_ENV === "production") notFound();
   const profile = await requireDashboardProfile();
   if (profile.role === "admin") redirect("/dashboard/admin/payments");
   if (result === "mock") {

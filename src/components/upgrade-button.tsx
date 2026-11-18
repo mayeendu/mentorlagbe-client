@@ -15,7 +15,7 @@ export function UpgradeButton({ role, className }: { role: "student" | "tutor"; 
       const { url, provider } = await authenticatedApiJson<{ url: string; provider: "mock" | "stripe" }>("/api/payments/checkout", { method: "POST" });
       const target = new URL(url);
       const allowed = provider === "mock"
-        ? target.origin === window.location.origin && target.pathname === "/payments/mock"
+        ? process.env.NODE_ENV !== "production" && target.origin === window.location.origin && target.pathname === "/payments/mock"
         : provider === "stripe" && target.origin === "https://checkout.stripe.com";
       if (!allowed) throw new Error("Invalid Checkout address.");
       window.location.assign(target.href);

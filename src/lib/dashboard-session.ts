@@ -31,9 +31,9 @@ export const getAccountProfile = cache(async (): Promise<AccountProfile | null> 
 
   const session: { user?: { id?: unknown; image?: unknown; role?: unknown; name?: unknown; email?: unknown; plan?: unknown } } | null = await response.json();
   const user = session?.user;
-  if (!user || !isRole(user.role)) return null;
+  if (!user || typeof user.id !== "string" || !user.id || !isRole(user.role)) return null;
   return {
-    id: typeof user.id === "string" ? user.id : "",
+    id: user.id,
     image: typeof user.image === "string" ? user.image : null,
     role: user.role,
     name: typeof user.name === "string" && user.name.trim() ? user.name : "MentorLagbe member",

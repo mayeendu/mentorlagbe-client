@@ -2,6 +2,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { ApplicationStats } from "@/components/application-stats";
 import { AccountAvatar } from "@/components/account-menu";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { dashboardTitles, requireDashboardProfile } from "@/lib/dashboard-sessio
 
 const overview = {
   student: { description: "Explore subjects and compare home and online tuition options.", label: "Browse subjects", href: "/#subjects" },
-  tutor: { description: "Explore the tuition preview and see how subjects, schedules, and rates are displayed.", label: "Browse tuition", href: "/#tuition" },
+  tutor: { description: "Browse published tuition posts by subject, class level, or mode.", label: "Browse tuition", href: "/tuitions" },
   admin: { description: "Review the access level attached to your account.", label: "View access summary", href: "#access" },
 };
 
@@ -28,6 +29,7 @@ async function Dashboard({ params }: PageProps<"/dashboard/[role]">) {
           {nextStep.label}<ArrowRight aria-hidden="true" />
         </Link>
       </section>
+      {role !== "admin" && <ApplicationStats role={role} />}
       <section id="profile" className="min-w-0 rounded-3xl border bg-card p-6 sm:p-8">
         <h2 className="mb-5 text-xl font-bold tracking-tight">Profile summary</h2>
         <div className="flex min-w-0 items-center gap-3">

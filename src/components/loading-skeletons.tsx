@@ -1,7 +1,7 @@
-export function TuitionSkeleton() {
+export function TuitionSkeleton({ showFilters = true }: { showFilters?: boolean }) {
   return (
     <div aria-label="Loading tuition listings" role="status" className="animate-pulse motion-reduce:animate-none">
-      <div className="mb-5 h-11 rounded-xl bg-[#eee8f8]" />
+      {showFilters && <div className="mb-5 h-11 rounded-xl bg-[#eee8f8]" />}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }, (_, index) => (
           <div key={index} className="grid gap-4 rounded-2xl border bg-card p-6">

@@ -5,13 +5,14 @@ import { Suspense } from "react";
 import { Brand } from "@/components/brand";
 import { TuitionSkeleton } from "@/components/loading-skeletons";
 import { SiteNavbar } from "@/components/site-navbar";
-import { TuitionBrowser } from "@/components/tuition-browser";
+import { TuitionCards } from "@/components/tuition-browser";
+import { TuitionUnavailable } from "@/components/tuition-unavailable";
 import { buttonVariants } from "@/components/ui/button";
-import { subjects } from "@/lib/demo-tuitions";
+import { getPublicTuitions, subjects } from "@/lib/public-tuitions";
 
 const categoryIcons = [Calculator, BookOpen, FlaskConical, Monitor, Languages, Wallet];
 const steps = [
-  { title: "Explore tuition", text: "Browse by subject, location, or online format to find a tuition that fits.", icon: Search },
+  { title: "Explore tuition", text: "Browse by subject, class level, or mode to find a tuition that fits.", icon: Search },
   { title: "Create your profile", text: "Join as a student or tutor and set up your MentorLagbe account.", icon: Users },
   { title: "Plan your next lesson", text: "Decide what to study, how often to meet, and which format works for you.", icon: GraduationCap },
 ];
@@ -31,13 +32,15 @@ function SectionHeading({ label, title, description }: { label: string; title: s
   );
 }
 
-async function FeaturedListings({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
-  const { subject } = await searchParams;
-  const selected = subjects.find((item) => item === subject) ?? "";
-  return <TuitionBrowser key={selected} initialSubject={selected} />;
+async function FeaturedListings() {
+  const result = await getPublicTuitions(new URLSearchParams({ limit: "6" })).catch(() => null);
+  if (!result) return <TuitionUnavailable message="Featured tuitions are temporarily unavailable." />;
+  return result.items.length ? <TuitionCards listings={result.items} /> : (
+    <p className="rounded-2xl border bg-card p-6 text-muted-foreground">No tuition posts are available yet.</p>
+  );
 }
 
-export default function Home({ searchParams }: PageProps<"/">) {
+export default function Home() {
   return (
     <>
       <SiteNavbar />
@@ -55,7 +58,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
                 Explore tuition by subject, schedule, and location. Find a fit for how you learn or what you teach.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="#tuition" className={buttonVariants({ size: "lg", className: "h-12 gap-2 px-5" })}>
+                <Link href="/tuitions" className={buttonVariants({ size: "lg", className: "h-12 gap-2 px-5" })}>
                   <Search aria-hidden="true" /> Search tuition <ArrowRight aria-hidden="true" />
                 </Link>
                 <Link href="#how-it-works" className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 px-5" })}>How it works</Link>
@@ -71,8 +74,11 @@ export default function Home({ searchParams }: PageProps<"/">) {
         </section>
 
         <section id="tuition" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-14 sm:px-8 sm:py-19">
-          <SectionHeading label="Browse tuition" title="Featured tuition" description="Explore six temporary demo listings. Rates and schedules are illustrative." />
-          <Suspense fallback={<TuitionSkeleton />}><FeaturedListings searchParams={searchParams} /></Suspense>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Featured tuitions</h2>
+            <Link href="/tuitions" className={buttonVariants({ variant: "outline" })}>View all tuitions <ArrowRight aria-hidden="true" /></Link>
+          </div>
+          <Suspense fallback={<TuitionSkeleton showFilters={false} />}><FeaturedListings /></Suspense>
         </section>
 
         <section id="how-it-works" className="scroll-mt-6 border-y bg-[#f8f5ff]">
@@ -96,7 +102,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
             {subjects.map((subject, index) => {
               const Icon = categoryIcons[index];
               return (
-                <Link key={subject} href={`/?subject=${encodeURIComponent(subject)}#tuition`} className="group flex min-w-0 flex-col items-start gap-3 rounded-2xl border bg-card p-4 text-sm font-semibold transition-colors hover:border-primary/50 hover:bg-muted sm:p-5">
+                <Link key={subject} href={`/tuitions?subject=${encodeURIComponent(subject)}`} className="group flex min-w-0 flex-col items-start gap-3 rounded-2xl border bg-card p-4 text-sm font-semibold transition-colors hover:border-primary/50 hover:bg-muted sm:p-5">
                   <Icon aria-hidden="true" className="size-5 text-primary" />{subject}
                 </Link>
               );
@@ -112,7 +118,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
                 <h3 className="text-lg font-bold">Free</h3>
                 <p className="mt-2 text-4xl font-bold tracking-tight">৳0</p>
                 <ul className="mt-5 mb-7 space-y-2.5 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2"><Check aria-hidden="true" className="size-4 text-primary" /> Browse demo tuition</li>
+                  <li className="flex items-center gap-2"><Check aria-hidden="true" className="size-4 text-primary" /> Browse tuition</li>
                   <li className="flex items-center gap-2"><Check aria-hidden="true" className="size-4 text-primary" /> Student or Tutor account</li>
                   <li className="flex items-center gap-2"><Check aria-hidden="true" className="size-4 text-primary" /> Role-specific dashboard</li>
                 </ul>
@@ -147,7 +153,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <Brand />
           <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <Link href="#tuition" className="hover:text-primary">Find tuition</Link>
+            <Link href="/tuitions" className="hover:text-primary">Find tuition</Link>
             <Link href="#subjects" className="hover:text-primary">Subjects</Link>
             <Link href="#pricing" className="hover:text-primary">Pricing</Link>
           </nav>

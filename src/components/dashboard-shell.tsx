@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, BookOpen, BriefcaseBusiness, House, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { AccountMenu } from "@/components/account-menu";
 import { Brand } from "@/components/brand";
@@ -11,17 +12,26 @@ import { cn } from "@/lib/utils";
 
 const roleLinks = {
   student: { label: "Browse subjects", href: "/#subjects", icon: BookOpen },
-  tutor: { label: "Browse tuition", href: "/#tuition", icon: BriefcaseBusiness },
+  tutor: { label: "Browse tuition", href: "/tuitions", icon: BriefcaseBusiness },
   admin: { label: "Access summary", href: "#access", icon: ShieldCheck },
 };
 
 export function DashboardShell({ profile, children }: { profile: AccountProfile; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const overview = "/dashboard/" + profile.role;
   const links = [
-    { label: "Overview", href: "#overview", icon: LayoutDashboard },
-    { label: "My profile", href: "#profile", icon: UserRound },
-    roleLinks[profile.role],
+    { label: "Overview", href: overview + "#overview", icon: LayoutDashboard },
+    { label: "My profile", href: overview + "#profile", icon: UserRound },
+    profile.role === "admin" ? { ...roleLinks.admin, href: overview + "#access" } : roleLinks[profile.role],
+    ...(profile.role === "tutor" ? [
+      { label: "Post tuition", href: "/dashboard/tutor/post-tuition", icon: BriefcaseBusiness },
+      { label: "My tuitions", href: "/dashboard/tutor/my-tuitions", icon: BookOpen },
+      { label: "Applicants", href: "/dashboard/tutor/applicants", icon: UserRound },
+    ] : []),
+    ...(profile.role === "student" ? [{ label: "My applications", href: "/dashboard/student/my-applications", icon: BriefcaseBusiness }] : []),
+    ...(profile.role === "admin" ? [{ label: "Tuition approvals", href: "/dashboard/admin/tuitions", icon: BriefcaseBusiness }] : []),
     { label: "Public homepage", href: "/", icon: House },
   ];
 
@@ -42,7 +52,7 @@ export function DashboardShell({ profile, children }: { profile: AccountProfile;
           <nav aria-label={`${profile.role} dashboard navigation`} className="grid gap-1">
             <p className={cn("px-3 pt-3 pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase", collapsed && "md:sr-only")}>{profile.role} workspace</p>
             {links.map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} onClick={() => setMobileOpen(false)} title={collapsed ? label : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-primary", href === "#overview" && "bg-muted text-primary", collapsed && "md:justify-center md:px-0")}>
+              <Link key={href} href={href} onClick={() => setMobileOpen(false)} title={collapsed ? label : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-primary", (pathname === href || (pathname === overview && href === overview + "#overview")) && "bg-muted text-primary", collapsed && "md:justify-center md:px-0")}>
                 <Icon aria-hidden="true" className="size-4 shrink-0" />
                 <span className={collapsed ? "md:sr-only" : undefined}>{label}</span>
                 {href.startsWith("/#") && <ArrowUpRight aria-hidden="true" className={cn("ml-auto size-3.5", collapsed && "md:hidden")} />}

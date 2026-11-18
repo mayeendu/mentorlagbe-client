@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getAccountProfile } from "@/lib/dashboard-session";
 
 const links = [
-  ["Find Tuition", "/#tuition"],
+  ["Find Tuition", "/tuitions"],
   ["How It Works", "/#how-it-works"],
   ["Subjects", "/#subjects"],
   ["Pricing", "/#pricing"],

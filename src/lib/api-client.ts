@@ -15,3 +15,12 @@ export async function authenticatedApiFetch(path: string, init: RequestInit = {}
   headers.set("Authorization", `Bearer ${data.token}`);
   return fetch(url, { ...init, headers, credentials: "omit", redirect: "error", cache: "no-store" });
 }
+
+export async function authenticatedApiJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await authenticatedApiFetch(path, init);
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.error ?? "Could not complete the tuition request.");
+  }
+  return response.status === 204 ? undefined as T : response.json();
+}

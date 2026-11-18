@@ -1,5 +1,6 @@
 import "server-only";
 import { connection } from "next/server";
+import { serverApiUrl } from "./server-api";
 
 export const subjects = ["Mathematics", "English", "Science", "ICT", "Bangla", "Business Studies"] as const;
 export type PublicTuition = {
@@ -23,8 +24,7 @@ type Listings = { items: PublicTuition[]; total: number; page: number; limit: nu
 
 async function fetchPublicTuitions(suffix: string) {
   await connection();
-  const base = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-  return fetch(new URL("/api/tuitions" + suffix, base), {
+  return fetch(serverApiUrl("/api/tuitions" + suffix), {
     cache: "no-store",
     signal: AbortSignal.timeout(8000),
   });

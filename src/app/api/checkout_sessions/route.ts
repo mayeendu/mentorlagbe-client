@@ -1,38 +1,36 @@
-import { NextResponse } from 'next/server'
-import { headers } from 'next/headers'
+import { serverApiUrl } from "@/lib/server-api";
 
-import { stripe } from '@/lib/stripe'
-export async function POST() {
-    try {
-        const headersList = await headers()
-        const origin = headersList.get('origin')
+const noStore = { "Cache-Control": "no-store" };
 
-        // Create Checkout Sessions from body params.
-        const session = await stripe.checkout.sessions.create({
-            line_items: [
-                {
-                    // Provide the exact Price ID (for example, price_1234) of the product you want to sell
-                    price: '{{PRICE_ID}}',
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-            // Provide a name (for example, hosted_web_0001) to label this Checkout integration and measure its conversion independently
-            integration_identifier: '{{INTEGRATION_ID}}',
-        });
-        if (!session.url) {
-            throw new Error('Stripe did not return a Checkout URL')
-        }
-        return NextResponse.redirect(session.url, 303)
-    } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not create a Checkout Session'
-        const status = err instanceof Error && 'statusCode' in err && typeof err.statusCode === 'number'
-            ? err.statusCode
-            : 500
-        return NextResponse.json(
-            { error: message },
-            { status }
-        )
+export async function POST(request: Request) {
+  const authorization = request.headers.get("authorization");
+  if (!authorization || !/^Bearer +[\w-]+\.[\w-]+\.[\w-]+$/i.test(authorization)) {
+    return Response.json({ error: "Bearer token required" }, {
+      status: 401, headers: { ...noStore, "WWW-Authenticate": "Bearer" },
+    });
+  }
+
+  try {
+    const response = await fetch(serverApiUrl("/api/payments/checkout"), {
+      method: "POST", headers: { authorization }, redirect: "error", cache: "no-store", signal: AbortSignal.timeout(30_000),
+    });
+    const result: { error?: unknown; url?: unknown; provider?: unknown } | null = await response.json();
+    if (!response.ok) {
+      return Response.json({ error: typeof result?.error === "string" ? result.error : "Could not open Checkout." }, {
+        status: response.status, headers: noStore,
+      });
     }
+
+    if (typeof result?.url !== "string") throw new Error("Missing Checkout URL");
+    const target = new URL(result.url);
+    if (result.provider === "mock" && target.pathname === "/payments/mock" && process.env.NODE_ENV !== "production") {
+      return new Response(null, { status: 303, headers: { ...noStore, Location: target.pathname + target.search } });
+    }
+    if (result.provider === "stripe" && target.origin === "https://checkout.stripe.com" && !target.username && !target.password) {
+      return new Response(null, { status: 303, headers: { ...noStore, Location: target.href } });
+    }
+    throw new Error("Invalid Checkout URL");
+  } catch {
+    return Response.json({ error: "Checkout is temporarily unavailable." }, { status: 502, headers: noStore });
+  }
 }

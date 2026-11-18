@@ -2,6 +2,7 @@ import "client-only";
 import { apiBaseURL, authClient } from "./auth-client";
 
 export async function authenticatedApiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (!apiBaseURL) throw new Error("The MentorLagbe API is not configured.");
   const base = new URL(apiBaseURL);
   const url = new URL(path, base);
   if (url.origin !== base.origin || !url.pathname.startsWith("/api/")) {

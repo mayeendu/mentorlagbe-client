@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { serverApiUrl } from "./server-api";
 
 export const dashboardTitles = {
   student: "Student dashboard",
@@ -19,11 +20,11 @@ export const getAccountProfile = cache(async (): Promise<AccountProfile | null> 
   const cookie = (await cookies()).toString();
   if (!cookie) return null;
 
-  const baseURL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-  const response = await fetch(new URL("/api/auth/get-session?disableRefresh=true", baseURL), {
+  const response = await fetch(serverApiUrl("/api/auth/get-session?disableRefresh=true"), {
     headers: { cookie },
     cache: "no-store",
     redirect: "error",
+    signal: AbortSignal.timeout(8_000),
   });
   if (response.status === 401) return null;
   if (!response.ok) throw new Error("Could not verify the session.");

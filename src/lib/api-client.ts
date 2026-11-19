@@ -9,8 +9,18 @@ export async function authenticatedApiFetch(path: string, init: RequestInit = {}
     throw new Error("Expected a URL on the MentorLagbe API.");
   }
 
-  const { data, error } = await authClient.token({ fetchOptions: { cache: "no-store" } });
-  if (error || !data?.token) throw new Error("Could not obtain an API token.");
+  const { data, error } = await authClient.token({ fetchOptions: { cache: "no-store" } }).catch(() => {
+    throw new Error("Could not reach the sign-in service. Please try again.");
+  });
+  if (error?.status === 401) {
+    throw new Error("Your session has expired. Sign in again and retry.");
+  }
+  if (error || typeof data?.token !== "string" || !data.token) {
+    const status = error?.status;
+    throw new Error(status
+      ? `The sign-in service could not authorize this request (HTTP ${status}).`
+      : "The sign-in service returned an invalid response.");
+  }
 
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${data.token}`);
